@@ -1,7 +1,7 @@
 import XCTest
-@testable import swiftly_http
+@testable import SwiftlyHttp
 
-final class swiftly_httpTests: XCTestCase {
+final class SwiftlyHttpTests: XCTestCase {
     func testExample() throws {
         // XCTest Documenation
         // https://developer.apple.com/documentation/xctest
