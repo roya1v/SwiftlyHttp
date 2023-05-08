@@ -18,6 +18,7 @@ public class SwiftlyHttp {
     public enum Method {
         case post
         case get
+        case delete
 
         var stringValue: String {
             switch self {
@@ -25,6 +26,8 @@ public class SwiftlyHttp {
                 return "POST"
             case .get:
                 return "GET"
+            case .delete:
+                return "DELETE"
             }
         }
     }
