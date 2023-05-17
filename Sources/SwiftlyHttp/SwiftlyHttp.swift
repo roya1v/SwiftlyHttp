@@ -133,6 +133,8 @@ public class SwiftlyHttp {
 }
 
 public class SwiftlyHttpDecodedHttp<Response: Decodable>: SwiftlyHttp {
+
+    var jsonDecoder: JSONDecoder = JSONDecoder()
     
     init(baseURL: URL,
          pathComponents: [String],
@@ -149,6 +151,11 @@ public class SwiftlyHttpDecodedHttp<Response: Decodable>: SwiftlyHttp {
         self.headers = headers
         self.authDelegate = authDelegate
     }
+
+    public func set(jsonDecoder: JSONDecoder) -> Self {
+        self.jsonDecoder = jsonDecoder
+        return self
+    }
     
     @_disfavoredOverload
     @discardableResult
@@ -160,7 +167,7 @@ public class SwiftlyHttpDecodedHttp<Response: Decodable>: SwiftlyHttp {
     public func perform() async throws -> Response {
         let response = try await super.perform()
         
-        return try JSONDecoder().decode(Response.self, from: response.0)
+        return try jsonDecoder.decode(Response.self, from: response.0)
     }
 }
 
