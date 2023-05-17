@@ -39,6 +39,7 @@ public class SwiftlyHttp {
     var body: Data?
     var headers = [String: String]()
     weak var authDelegate: AuthorizationDelegate?
+    var jsonEncoder: JSONEncoder = JSONEncoder()
 
     public init?(baseURL: String) {
         if let url = URL(string: baseURL) {
@@ -77,8 +78,13 @@ public class SwiftlyHttp {
     }
 
     public func body(_ body: some Encodable) throws -> Self {
-        self.body = try JSONEncoder().encode(body)
+        self.body = try jsonEncoder.encode(body)
         headers["Content-Type"] = "application/json"
+        return self
+    }
+
+    public func set(jsonEncoder: JSONEncoder) -> Self {
+        self.jsonEncoder = jsonEncoder
         return self
     }
     
