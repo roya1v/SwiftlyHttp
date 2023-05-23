@@ -15,6 +15,8 @@ let response = try await SwiftlyHttp(baseURL: "https://server.com")!
     .perform()
 ```
 
+Short docs can be found [here](https://roya1v.github.io/SwiftlyHttp/documentation/swiftlyhttp).
+
 ## Installation
 
 ### Swift Package Manager
