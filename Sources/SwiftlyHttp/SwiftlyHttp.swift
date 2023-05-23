@@ -62,6 +62,11 @@ public class SwiftlyHttp {
         return self
     }
 
+    public func add(queryParameter: String, value: String) -> Self {
+        baseURL.append(queryItems: [.init(name: queryParameter, value: value)])
+        return self
+    }
+
     public func authorization(_ auth: Authorization) -> Self {
         self.auth = auth
         return self
