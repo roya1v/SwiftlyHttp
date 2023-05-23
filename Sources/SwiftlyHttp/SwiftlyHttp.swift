@@ -41,6 +41,8 @@ public class SwiftlyHttp {
     weak var authDelegate: AuthorizationDelegate?
     var jsonEncoder: JSONEncoder = JSONEncoder()
 
+    /// Inits a request if provided a valid URL string
+    ///  - Parameter baseURL: The base url of the request.
     public init?(baseURL: String) {
         if let url = URL(string: baseURL) {
             self.baseURL = url
@@ -48,11 +50,15 @@ public class SwiftlyHttp {
             return nil
         }
     }
-    
+
+    /// Inits a request using a `URL`.
+    ///  - Parameter baseURL: The base url of the request.
     public init(baseURL: URL) {
         self.baseURL = baseURL
     }
-    
+
+    /// Adds a path component to the request's url.
+    ///  - Parameter path: The path component.
     public func add(path: String) -> Self {
         if #available(iOS 16.0, *) {
             baseURL = baseURL.appending(path: path)
@@ -62,11 +68,16 @@ public class SwiftlyHttp {
         return self
     }
 
+    /// Adds a query parameter to the request's url.
+    ///  - Parameter queryParameter: The query parameter name.
+    ///  - Parameter value: The query parameter value.
     public func add(queryParameter: String, value: String) -> Self {
         baseURL.append(queryItems: [.init(name: queryParameter, value: value)])
         return self
     }
 
+    /// Adds authorization to the request. Provided by the ``Authorization`` enum.
+    ///  - Parameter auth: The authentication.
     public func authorization(_ auth: Authorization) -> Self {
         self.auth = auth
         return self
@@ -77,22 +88,33 @@ public class SwiftlyHttp {
         return self
     }
 
+    /// Sets the request's method. Defualt is `.get` Provided by the ``Method`` enum.
+    ///  - Parameter method: The method.
     public func method(_ method: Method) -> Self {
         self.method = method
         return self
     }
 
+    /// Sets the request's body to an Encodable type.
+    ///  - Parameter body: The body.
+    ///  - Note: Also sets the request's `Content-Type` to `application/json`
     public func body(_ body: some Encodable) throws -> Self {
         self.body = try jsonEncoder.encode(body)
         headers["Content-Type"] = "application/json"
         return self
     }
 
+    /// Sets a custom `JSONEncoder` for encoding the body.
+    ///  - Parameter jsonEncoder: The encoder.
+    ///  - Note: Needs to be called before ``body(_:)`` to take affect.
     public func set(jsonEncoder: JSONEncoder) -> Self {
         self.jsonEncoder = jsonEncoder
         return self
     }
-    
+
+    /// Sets the response to be decoded to a `Decodable` type.
+    ///  - Parameter type: The type to which to encode the response.
+    ///  - Returns: An instance of ``SwiftlyHttpDecodedHttp`` which inherits all settings.
     public func decode<Response: Decodable>(to type: Response.Type) -> SwiftlyHttpDecodedHttp<Response> {
         return SwiftlyHttpDecodedHttp<Response>(baseURL: baseURL,
                                                 pathComponents: pathComponents,
@@ -102,7 +124,9 @@ public class SwiftlyHttp {
                                                 headers: headers,
                                                 authDelegate: authDelegate)
     }
-    
+
+    /// Performs the request.
+    ///  - Returns: A tuple of `Data` and `URLResponse`. Same way as an `URLRequest`.
     @discardableResult
     public func perform() async throws -> (Data, URLResponse) {
         let url = URLComponents(url: baseURL, resolvingAgainstBaseURL: true)!
@@ -157,17 +181,22 @@ public class SwiftlyHttpDecodedHttp<Response: Decodable>: SwiftlyHttp {
         self.authDelegate = authDelegate
     }
 
+    /// Sets a custom `JSONDecoder` for encoding the body.
+    ///  - Parameter jsonDecoder: The decoder.
     public func set(jsonDecoder: JSONDecoder) -> Self {
         self.jsonDecoder = jsonDecoder
         return self
     }
-    
+
+    /// Override of the ``perform()-641f5`` method of ``SwiftlyHttp``. Shouldn't  be used here.
     @_disfavoredOverload
     @discardableResult
     public override func perform() async throws -> (Data, URLResponse) {
         try await super.perform()
     }
 
+    /// Performs the request.
+    ///  - Returns: An instance of the type provided for decoding.
     @discardableResult
     public func perform() async throws -> Response {
         let response = try await super.perform()
