@@ -129,6 +129,7 @@ public class SwiftlyHttp {
 
     public func websocket() -> SwiftlyWebSocketConnection {
         let url = URLComponents(url: baseURL, resolvingAgainstBaseURL: true)!
+        // TODO: Add scheme check and/or change
         return SwiftlyWebSocketConnection(task: URLSession.shared
             .webSocketTask(with: url.url!))
     }
