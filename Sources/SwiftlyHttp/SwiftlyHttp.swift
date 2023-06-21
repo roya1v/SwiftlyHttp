@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Combine
 
 public class SwiftlyHttp {
 
@@ -125,6 +126,12 @@ public class SwiftlyHttp {
                                                 authDelegate: authDelegate)
     }
 
+    public func websocket() -> SwiftlyWebSocketConnection {
+        let url = URLComponents(url: baseURL, resolvingAgainstBaseURL: true)!
+        return SwiftlyWebSocketConnection(task: URLSession.shared
+            .webSocketTask(with: url.url!))
+    }
+
     /// Performs the request.
     ///  - Returns: A tuple of `Data` and `URLResponse`. Same way as an `URLRequest`.
     @discardableResult
@@ -202,6 +209,36 @@ public class SwiftlyHttpDecodedHttp<Response: Decodable>: SwiftlyHttp {
         let response = try await super.perform()
         
         return try jsonDecoder.decode(Response.self, from: response.0)
+    }
+}
+
+public class SwiftlyWebSocketConnection {
+    private let task: URLSessionWebSocketTask
+    private let messagePassthroughSubject = PassthroughSubject<URLSessionWebSocketTask.Message, Error>()
+
+    public var messagePublisher: AnyPublisher<URLSessionWebSocketTask.Message, Error> {
+        messagePassthroughSubject.eraseToAnyPublisher()
+    }
+
+    init(task: URLSessionWebSocketTask) {
+        self.task = task
+        receive()
+    }
+
+    public func send(message: URLSessionWebSocketTask.Message) async throws {
+        try await task.send(message)
+    }
+
+    private func receive() {
+        task.receive { result in
+            switch result {
+            case .success(let message):
+                self.messagePassthroughSubject.send(message)
+                self.receive()
+            case .failure(let error):
+                self.messagePassthroughSubject.send(completion: .failure(error))
+            }
+        }
     }
 }
 
