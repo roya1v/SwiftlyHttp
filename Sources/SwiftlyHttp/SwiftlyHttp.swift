@@ -72,6 +72,7 @@ public class SwiftlyHttp {
     /// Adds a query parameter to the request's url.
     ///  - Parameter queryParameter: The query parameter name.
     ///  - Parameter value: The query parameter value.
+    @available(iOS 16.0, *)
     public func add(queryParameter: String, value: String) -> Self {
         baseURL.append(queryItems: [.init(name: queryParameter, value: value)])
         return self
