@@ -224,6 +224,7 @@ public class SwiftlyWebSocketConnection {
     init(task: URLSessionWebSocketTask) {
         self.task = task
         receive()
+        task.resume()
     }
 
     public func send(message: URLSessionWebSocketTask.Message) async throws {
