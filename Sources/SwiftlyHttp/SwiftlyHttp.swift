@@ -20,6 +20,8 @@ public class SwiftlyHttp {
         case post
         case get
         case delete
+        case put
+        case patch
 
         var stringValue: String {
             switch self {
@@ -29,6 +31,10 @@ public class SwiftlyHttp {
                 return "GET"
             case .delete:
                 return "DELETE"
+            case .put:
+                return "PUT"
+            case .patch:
+                return "PATCH"
             }
         }
     }
