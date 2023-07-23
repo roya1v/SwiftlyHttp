@@ -40,7 +40,9 @@ public class SwiftlyHttp {
     var body: Data?
     var headers = [String: String]()
     weak var authDelegate: AuthorizationDelegate?
+    var authFactory: (() async -> Authorization?)?
     var jsonEncoder: JSONEncoder = JSONEncoder()
+    var urlSession = URLSession.shared
 
     /// Inits a request if provided a valid URL string
     ///  - Parameter baseURL: The base url of the request.
@@ -85,6 +87,14 @@ public class SwiftlyHttp {
         return self
     }
 
+    /// Adds an authorization factory the request.
+    ///  - Parameter authFactory: A closure returning ``Authorization`` if it is needed.
+    public func authorization(_ authFactory: @escaping () async -> (Authorization?)) -> Self {
+        self.authFactory = authFactory
+        return self
+    }
+
+    @available(*, deprecated, message: "Use the closure one instead")
     public func authorizationDelegate(_ delegate: AuthorizationDelegate) -> Self {
         authDelegate = delegate
         return self
@@ -148,13 +158,19 @@ public class SwiftlyHttp {
             addAuthorizationIfNeeded(to: &request, auth: auth)
         }
 
+        if let authFactory,
+           let auth = await authFactory() {
+
+            addAuthorizationIfNeeded(to: &request, auth: auth)
+        }
+
         request.httpMethod = method.stringValue
         request.httpBody = body
         headers.forEach { pair in
             request.setValue(pair.value, forHTTPHeaderField: pair.key)
         }
 
-        return try await URLSession.shared.data(for: request)
+        return try await urlSession.data(for: request)
     }
 
     private func addAuthorizationIfNeeded(to request: inout URLRequest, auth: Authorization) {
