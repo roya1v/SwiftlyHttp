@@ -150,10 +150,21 @@ public class SwiftlyHttp {
             .webSocketTask(with: url.url!))
     }
 
+    public func websocket() async throws -> SwiftlyWebSocketConnection {
+        let request = try await getRequest()
+        // TODO: Add scheme check and/or change
+        return SwiftlyWebSocketConnection(task: URLSession.shared
+            .webSocketTask(with: request))
+    }
+
     /// Performs the request.
     ///  - Returns: A tuple of `Data` and `URLResponse`. Same way as an `URLRequest`.
     @discardableResult
     public func perform() async throws -> (Data, URLResponse) {
+        try await urlSession.data(for: try await getRequest())
+    }
+
+    private func getRequest() async throws -> URLRequest {
         let url = URLComponents(url: baseURL, resolvingAgainstBaseURL: true)!
         var request = URLRequest(url: url.url!)
 
@@ -175,8 +186,7 @@ public class SwiftlyHttp {
         headers.forEach { pair in
             request.setValue(pair.value, forHTTPHeaderField: pair.key)
         }
-
-        return try await urlSession.data(for: request)
+        return request
     }
 
     private func addAuthorizationIfNeeded(to request: inout URLRequest, auth: Authorization) {
