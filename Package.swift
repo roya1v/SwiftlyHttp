@@ -9,7 +9,7 @@ let package = Package(
         .library(
             name: "SwiftlyHttp",
             targets: ["SwiftlyHttp"]),
-    ], dependencies: [.package(url: "https://github.com/apple/swift-docc-plugin", from: "1.0.0"),],
+    ], dependencies: [.package(url: "https://github.com/apple/swift-docc-plugin", from: "1.3.0"),],
     targets: [
         .target(
             name: "SwiftlyHttp"),
