@@ -2,7 +2,7 @@ name: build-docs
 on: [push]
 jobs:
   build-docs:
-    runs-on: macos-latest
+    runs-on: macos-13
     steps:
       - uses: actions/checkout@v4
       - run: swift package generate-documentation
