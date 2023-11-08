@@ -1,0 +1,7 @@
+name: build-docs
+jobs:
+  build-docs:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: swift package generate-documentation
