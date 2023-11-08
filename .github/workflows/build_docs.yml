@@ -12,3 +12,7 @@ jobs:
             --transform-for-static-hosting \
             --hosting-base-path https://roya1v.github.io \
             --output-path ./docs
+      - run: |
+          git config --global user.name 'Github Action'
+          git commit -am "New docs"
+          git push
