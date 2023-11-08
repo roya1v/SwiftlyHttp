@@ -1,4 +1,5 @@
 name: build-docs
+on: [push]
 jobs:
   build-docs:
     runs-on: macos-latest
