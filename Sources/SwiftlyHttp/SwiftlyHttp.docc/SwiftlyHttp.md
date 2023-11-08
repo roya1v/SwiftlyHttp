@@ -1,4 +1,4 @@
-# SwiftlyHttp
+# ``SwiftlyHttp``
 
 An easy way to make HTTP requests in Swift.
 
