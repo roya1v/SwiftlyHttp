@@ -10,6 +10,7 @@ jobs:
             generate-documentation --target SwiftlyHttp \
             --disable-indexing \
             --transform-for-static-hosting \
+            --hosting-base-path SwiftlyHttp \
             --output-path ./docs
       - uses: JamesIves/github-pages-deploy-action@v4
         with:
