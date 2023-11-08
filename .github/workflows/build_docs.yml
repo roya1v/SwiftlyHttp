@@ -5,9 +5,10 @@ jobs:
     runs-on: macos-13
     steps:
       - uses: actions/checkout@v4
-      - run: swift package --allow-writing-to-directory ./docs \
-    generate-documentation --target SwiftlyHttp \
-    --disable-indexing \
-    --transform-for-static-hosting \
-    --hosting-base-path https://roya1v.github.io \
-    --output-path ./docs
+      - run: | 
+      swift package --allow-writing-to-directory ./docs \
+        generate-documentation --target SwiftlyHttp \
+        --disable-indexing \
+        --transform-for-static-hosting \
+        --hosting-base-path https://roya1v.github.io \
+        --output-path ./docs
