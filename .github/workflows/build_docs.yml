@@ -1,0 +1,17 @@
+name: build-docs
+on: [push]
+jobs:
+  build-docs:
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v4
+      - run: | 
+          swift package --allow-writing-to-directory ./docs \
+            generate-documentation --target SwiftlyHttp \
+            --disable-indexing \
+            --transform-for-static-hosting \
+            --hosting-base-path SwiftlyHttp \
+            --output-path ./docs
+      - uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: docs
