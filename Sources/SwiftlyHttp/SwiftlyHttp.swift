@@ -8,9 +8,20 @@
 import Foundation
 import Combine
 
+public enum SwiftlyHttpError: Error {
+    case badScheme
+}
+
 public class SwiftlyHttp {
 
-    public enum Authorization {
+    /// Represents possible authentication methods.
+    ///
+    ///   Authentication case | Description
+    /// ---|---
+    /// ``basic(login:password:)``| Basic authentication
+    /// ``bearer(token:)``|Bearer authentication
+    ///  ``notNeeded``| No authentication
+    public enum Authentication {
         case basic(login: String, password: String)
         case bearer(token: String)
         case notNeeded
@@ -41,12 +52,11 @@ public class SwiftlyHttp {
 
     var baseURL: URL
     var pathComponents = [String]()
-    var auth: Authorization?
+    var auth: Authentication?
     var method: Method = .get
     var body: Data?
     var headers = [String: String]()
-    weak var authDelegate: AuthorizationDelegate?
-    var authFactory: (() async -> Authorization?)?
+    var authFactory: (() async -> Authentication?)?
     var jsonEncoder: JSONEncoder = JSONEncoder()
     var urlSession = URLSession.shared
 
@@ -86,23 +96,17 @@ public class SwiftlyHttp {
         return self
     }
 
-    /// Adds authorization to the request. Provided by the ``Authorization`` enum.
+    /// Adds authentication to the request. Provided by the ``Authentication`` enum.
     ///  - Parameter auth: The authentication.
-    public func authorization(_ auth: Authorization) -> Self {
+    public func authentication(_ auth: Authentication) -> Self {
         self.auth = auth
         return self
     }
 
-    /// Adds an authorization factory the request.
-    ///  - Parameter authFactory: A closure returning ``Authorization`` if it is needed.
-    public func authorization(_ authFactory: @escaping () async -> (Authorization?)) -> Self {
+    /// Adds an authentication factory the request.
+    ///  - Parameter authFactory: A closure returning ``Authentication`` if it is needed.
+    public func authentication(_ authFactory: @escaping () async -> (Authentication?)) -> Self {
         self.authFactory = authFactory
-        return self
-    }
-
-    @available(*, deprecated, message: "Use the closure one instead")
-    public func authorizationDelegate(_ delegate: AuthorizationDelegate) -> Self {
-        authDelegate = delegate
         return self
     }
 
@@ -140,19 +144,17 @@ public class SwiftlyHttp {
                                                 method: method,
                                                 body: body,
                                                 headers: headers,
-                                                authDelegate: authDelegate)
+                                                authFactory: authFactory)
     }
 
-    public func websocket() -> SwiftlyWebSocketConnection {
-        let url = URLComponents(url: baseURL, resolvingAgainstBaseURL: true)!
-        // TODO: Add scheme check and/or change
-        return SwiftlyWebSocketConnection(task: URLSession.shared
-            .webSocketTask(with: url.url!))
-    }
-
+    /// Creates a websocket request.
+    ///  - Returns: An instance of ``SwiftlyWebSocketConnection``.
     public func websocket() async throws -> SwiftlyWebSocketConnection {
         let request = try await getRequest()
         // TODO: Add scheme check and/or change
+        guard request.url?.scheme == "ws" || request.url?.scheme == "wss" else {
+            throw SwiftlyHttpError.badScheme
+        }
         return SwiftlyWebSocketConnection(task: URLSession.shared
             .webSocketTask(with: request))
     }
@@ -168,17 +170,14 @@ public class SwiftlyHttp {
         let url = URLComponents(url: baseURL, resolvingAgainstBaseURL: true)!
         var request = URLRequest(url: url.url!)
 
-        if let delegate = authDelegate {
-            let auth = try delegate.getAuthorization()
-            addAuthorizationIfNeeded(to: &request, auth: auth)
-        } else if let auth = auth {
-            addAuthorizationIfNeeded(to: &request, auth: auth)
+        if let auth = auth {
+            addAuthenticationIfNeeded(to: &request, auth: auth)
         }
 
         if let authFactory,
            let auth = await authFactory() {
 
-            addAuthorizationIfNeeded(to: &request, auth: auth)
+            addAuthenticationIfNeeded(to: &request, auth: auth)
         }
 
         request.httpMethod = method.stringValue
@@ -189,37 +188,38 @@ public class SwiftlyHttp {
         return request
     }
 
-    private func addAuthorizationIfNeeded(to request: inout URLRequest, auth: Authorization) {
+    private func addAuthenticationIfNeeded(to request: inout URLRequest, auth: Authentication) {
         switch auth {
         case .basic(let login, let password):
             let token = String(format: "%@:%@", login, password).data(using: .utf8)!.base64EncodedData()
-            request.setValue("Basic \(String(data: token, encoding: .utf8)!)", forHTTPHeaderField: "Authorization")
+            request.setValue("Basic \(String(data: token, encoding: .utf8)!)", forHTTPHeaderField: "Authentication")
         case .bearer(let token):
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authentication")
         case .notNeeded:
             return
         }
     }
 }
 
+/// A SwiftlyHttp request that decodes it's response body. Use ``SwiftlyHttp/SwiftlyHttp/decode(to:)`` on ``SwiftlyHttp/SwiftlyHttp`` to create.
 public class SwiftlyHttpDecodedHttp<Response: Decodable>: SwiftlyHttp {
 
     var jsonDecoder: JSONDecoder = JSONDecoder()
     
     init(baseURL: URL,
          pathComponents: [String],
-         auth: Authorization?,
+         auth: Authentication?,
          method: Method,
          body: Data?,
          headers: [String: String],
-         authDelegate: AuthorizationDelegate?) {
+         authFactory: (() async -> Authentication?)?) {
         super.init(baseURL: baseURL)
         self.pathComponents = pathComponents
         self.auth = auth
         self.method = method
         self.body = body
         self.headers = headers
-        self.authDelegate = authDelegate
+        self.authFactory = authFactory
     }
 
     /// Sets a custom `JSONDecoder` for encoding the body.
@@ -275,8 +275,4 @@ public class SwiftlyWebSocketConnection {
             }
         }
     }
-}
-
-public protocol AuthorizationDelegate: AnyObject {
-    func getAuthorization() throws -> SwiftlyHttp.Authorization
 }

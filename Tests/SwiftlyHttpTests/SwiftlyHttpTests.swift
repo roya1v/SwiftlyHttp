@@ -45,7 +45,7 @@ final class SwiftlyHttpTests: XCTestCase {
     func testAuthFactory() async throws {
         let expectation = XCTestExpectation(description: "")
         let sut = request
-            .authorization {
+            .authentication {
                 return .bearer(token: "mock-test")
             }
 
