@@ -192,9 +192,9 @@ public class SwiftlyHttp {
         switch auth {
         case .basic(let login, let password):
             let token = String(format: "%@:%@", login, password).data(using: .utf8)!.base64EncodedData()
-            request.setValue("Basic \(String(data: token, encoding: .utf8)!)", forHTTPHeaderField: "Authentication")
+            request.setValue("Basic \(String(data: token, encoding: .utf8)!)", forHTTPHeaderField: "Authorization")
         case .bearer(let token):
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authentication")
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         case .notNeeded:
             return
         }
