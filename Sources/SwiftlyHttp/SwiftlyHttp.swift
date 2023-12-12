@@ -134,6 +134,14 @@ public class SwiftlyHttp {
         return self
     }
 
+    /// Sets the request's header.
+    /// - Parameter header: The header name.
+    /// - Parameter value: The header value. If nil will remove the header.
+    public func setHeader(_ header: String, to value: String?) -> Self {
+        headers[header] = value
+        return self
+    }
+
     /// Sets a custom `JSONEncoder` for encoding the body.
     ///  - Parameter jsonEncoder: The encoder.
     ///  - Note: Needs to be called before ``body(_:)`` to take affect.
