@@ -125,6 +125,14 @@ public class SwiftlyHttp {
         headers["Content-Type"] = "application/json"
         return self
     }
+    
+    /// Sets the request's body to the provided data.
+    ///  - Parameter body: The body data.
+    ///  - Note: Also sets the request's `Content-Type` to `application/json`
+    public func body(_ body: Data) -> Self {
+        self.body = body
+        return self
+    }
 
     /// Sets a custom `JSONEncoder` for encoding the body.
     ///  - Parameter jsonEncoder: The encoder.
